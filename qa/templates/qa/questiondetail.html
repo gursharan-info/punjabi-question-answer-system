@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <h3>Comprehension - {{ comprehension.ComprehensionTitle }}</h3>
+    <p>{{ comprehension.ComprehensionsText }}</p>
+</div>
+<div class="row">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th colspan="5">Answers</th>
+            </tr>
+            <tr>
+                <th>Sentence Index</th>
+                <th>Lexical Density</th>
+                <th>Readability Index</th>
+                <th>Punctuation Indexes</th>
+                <th>COG</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{question.SentenceIndex}}</td>
+                <td>{{question.LexicalDensity}}</td>
+                <td>{{question.ReadabilityIndex}}</td>
+                <td>{{question.PunctuationIndex}}</td>
+                <td>({{question.cogX}}, {{question.cogY}}) <!--= {{question.center_of_gravity}}--></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<div class="row">
+    <dl>
+        <dt class="text-center">Answers</dt>
+        <dd>
+            <table class="table table-bordered table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Answer</th>
+                        <th>Sentence Index</th>
+                        <th>Lexical Density</th>
+                        <th>Readability Index</th>
+                        <th>Punctuation Indexes</th>
+                        <th>COG</th>
+                    </tr>
+                </thead>
+                <tbody>
+                        {%for answer in answers %}
+                            <tr>
+                                <td>{{answer.AnswerText}}</td>
+                                <td>{{answer.SentenceIndex}}</td>
+                                <td>{{answer.LexicalDensity}}</td>
+                                <td>{{answer.ReadabilityIndex}}</td>
+                                <td>{{answer.PunctuationIndex}}</td>
+                                <td>({{answer.cogX}}, {{answer.cogY}}) <!--= {{question.center_of_gravity}}--></td>
+                            </tr>
+                        {% endfor %}
+                </tbody>
+            </table>
+        </dd>
+    </dl>
+</div>
+
+
+{{X}}<br>
+{{Y}}<br>
+
+{% endblock %}
+</div>

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <dl>
+        <dt>
+            <h3>{{ comprehension.ComprehensionTitle }}</h3>
+        </dt>
+        <dd>{{ comprehension.ComprehensionsText }}</dd>
+    </dl>
+</div>
+<div class="row">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Question</th>
+                <th>Lexical Density</th>
+                <th>Readability Index</th>
+                <th>Punctuation Indexes</th>
+                <th>COG</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for question in questions %}
+                <tr>
+                    <td><a class="clickable-div" href="{% url 'qa:questiondetail' question.id %}">{{question.QuestionText}}</a></td>
+                    <td>{{question.LexicalDensity}}</td>
+                    <td>{{question.ReadabilityIndex}}</td>
+                    <td>{{question.PunctuationIndex}}</td>
+                    <td>({{question.cogX}}, {{question.cogY}}) <!--= {{question.center_of_gravity}}--></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
