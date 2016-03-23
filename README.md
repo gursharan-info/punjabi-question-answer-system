@@ -1,2 +1,2 @@
-# punjabi-question-answer-system
+# punjabiqa
 Punjabi Question Anwering System
