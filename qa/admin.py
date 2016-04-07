@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.forms.models import BaseInlineFormSet
-
+import re
 #from django.forms import ModelForm
 
 # Register your models here.
@@ -11,22 +11,29 @@ from .models import Question, Answer, AnswerType, QuestionType, Comprehension, D
 class ComprehensionForm(forms.ModelForm):
     model = Comprehension
 
-class AnswerForm(forms.ModelForm):
-    model = Answer
+class QuestionForm(forms.ModelForm):
+    model = Question
+
+    def clean(self, value):
+        cleaned_data = self.cleaned_data
+
+        QTaggsOnly = re.sub(r'([^A-Z_a-z\\])', '', cleaned_data['QuestionTagged'].strip())
+        cleaned_data['QuestionTagsOnly'] = QTaggsOnly
+        return cleaned_data
 
 class QuestionAdmin(admin.ModelAdmin):
     list_filter = ['QuestionTypeID', 'Comprehension', 'LastUpdate']
     search_fields = ['QuestionText']
     list_display = ('QuestionText', 'LastUpdate')
-
+    form = QuestionForm
 
 class QuestionInline(admin.TabularInline):  # Similar to book in example github page
+    fields = ('QuestionText', 'QuestionTypeID','QuestionTagged', 'QuestionTagsOnly', 'QuestionRemarks')
     model = Question
-    extra = 0
+    extra = 4
 
 class AnswerInline(admin.TabularInline):   # Similar to Press in github page
     model = Answer
-    form = AnswerForm
     #formset = ComprehensionFormSet
    # extra = 2
 
@@ -37,6 +44,7 @@ class AnswerAdmin(admin.ModelAdmin):
 
 class ComprehensionAdmin(admin.ModelAdmin):
     form = ComprehensionForm
+
     fieldsets = [
         ('Main', {'fields': ['ComprehensionTitle','ComprehensionsText','ComprehensionTagged','ComprehensionTagsOnly']}),
         ('Additional Info', {'fields': ['ComprehensionsRemarks'], 'classes': ['collapse']}),

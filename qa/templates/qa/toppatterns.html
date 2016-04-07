@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="text-center">Top 10 Patterns</h3>
+<table class="table table-striped">
+    <thead>
+        <th>Pattern</th>
+        <th>Occurrences</th>
+    </thead>
+    <tbody>
+        {% for question in questions %}
+            <tr>
+                {% for q in question %}
+                    <td>{{q}}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
