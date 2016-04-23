@@ -14,20 +14,12 @@
         <thead>
             <tr>
                 <th>Question</th>
-                <th>Lexical Density</th>
-                <th>Readability Index</th>
-                <th>Punctuation Indexes</th>
-                <th>COG</th>
             </tr>
         </thead>
         <tbody>
             {% for question in questions %}
                 <tr>
                     <td><a class="clickable-div" href="{% url 'qa:questiondetail' question.id %}">{{question.QuestionText}}</a></td>
-                    <td>{{question.LexicalDensity}}</td>
-                    <td>{{question.ReadabilityIndex}}</td>
-                    <td>{{question.PunctuationIndex}}</td>
-                    <td>({{question.cogX}}, {{question.cogY}}) <!--= {{question.center_of_gravity}}--></td>
                 </tr>
             {% endfor %}
         </tbody>

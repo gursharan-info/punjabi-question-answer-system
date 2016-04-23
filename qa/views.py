@@ -13,6 +13,13 @@ from graphos.sources.simple import SimpleDataSource
 from graphos.renderers import flot
 import re
 import string
+from django.db.models import Count
+from scipy import spatial
+import numpy as np
+import cogm
+import bonus
+import random
+
 # Create your views here.
 
 
@@ -74,130 +81,165 @@ def compdetail(request, comprehension_id):
     try:
         comprehension = Comprehension.objects.get(pk=comprehension_id)
         questions = Question.objects.select_related().filter(Comprehension=comprehension_id)
-        A = []
-        B = []
-        C = []
-        for question in questions:
-            parts = question.QuestionTagsOnly.split('\\')
 
-            punctuations = [i+1 for i, x in enumerate(parts) if x == 'RD_PUNC']
-            question.PunctuationIndex = punctuations[-1]
-
-            ComplexWords = Dictionary.objects.filter(CompoundWord=True)
-            words = question.QuestionText.split(' ')
-            comp_count = len([match for match in words if match in ComplexWords])
-
-            all_named_entities = [dict.Word for dict in Dictionary.objects.filter(NamedEntity=True)]
-            current_named_entities = [m for m in words if m in all_named_entities]
-
-            named_entity_types = [ne.name for ne in NamedEntityType.objects.filter(dictionary__Word__in=current_named_entities).distinct()]
-
-            X1 = len([ne for ne in words if ne in current_named_entities])
-            Y1 = len(set(named_entity_types))
-            A.append([X1,Y1])
-            X2 = len(set(words))
-            Y2 = len(set(parts))
-            B.append([X2,Y2])
-            X3 = X1 * Y1
-            Y3 = len(set(named_entity_types))
-            C.append([X3,Y3])
-            question.ReadabilityIndex = 0.4 * ( (len(words) / 1) + 100 * (comp_count / len(words)))
-
-            Nlex = parts.count('N_NN') + parts.count('N_NNP') + parts.count('V_VM') + parts.count('V_VM_VNF') + parts.count('V_VM_VINF') + parts.count('V_VM_VNG') + parts.count('V_VAUX') + parts.count('JJ') + parts.count('RB')
-            question.LexicalDensity = "%.2f" % round( Nlex / len(parts), 2)
-
-            question.cogX = ((float(X1) * float(question.LexicalDensity)) + (float(X2) * float(question.ReadabilityIndex)) + (float(X3) * float(question.PunctuationIndex) ) ) / (float(question.LexicalDensity) + float(question.ReadabilityIndex) + float(question.PunctuationIndex))
-            question.cogY = ((float(Y1) * float(question.LexicalDensity)) + (float(Y2) * float(question.ReadabilityIndex)) + (float(Y3) * float(question.PunctuationIndex) ) ) / (float(question.LexicalDensity) + float(question.ReadabilityIndex) + float(question.PunctuationIndex))
-            question.center_of_gravity = ujson.dumps([question.cogX,question.cogY])
 
     except Comprehension.DoesNotExist:
         raise Http404('Comprehension does not exist')
-    return render(request,  'qa/compdetail.html', {'comprehension': comprehension, 'questions': questions, 'complexwords':
-        ComplexWords, 'words': current_named_entities, 'A': A,'B': B, 'C':C})
+    return render(request,  'qa/compdetail.html', {'comprehension': comprehension, 'questions': questions})
+
+def questions(request):
+
+    question_types = QuestionType.objects.all()
+
+    questions = []
+    for type in question_types:
+        type_list = [Question.objects.filter(QuestionTypeID=type), type]
+        questions.append(type_list)
+
+    #types = QuestionType.objects.annotate(count=Count('questiontypes')).order_by('-count').values('id', 'count')
+    return render(request,  'qa/questions.html', {'questions': questions,})
 
 def questiondetail(request, question_id):
     try:
         question = Question.objects.get(pk=question_id)
         question_types = question.QuestionTypeID.all()
         comprehension = Comprehension.objects.get(pk=question.Comprehension_id)
-        parts = question.QuestionTagsOnly.split('\\')
 
-        punctuations = [i+1 for i, x in enumerate(parts) if x == 'RD_PUNC']
-        question.PunctuationIndex = punctuations[-1]
+        # Split Question tags string into individual tags
+        tag_parts = question.QuestionTagsOnly.split('\\')
 
-        ComplexWords = Dictionary.objects.filter(CompoundWord=True)
-        words = question.QuestionText.split(' ')
-        comp_count = len([match for match in words if match in ComplexWords])
+        # Find Punctuation Index (W3)
+        punctuations = [i+1 for i, x in enumerate(tag_parts) if x == 'RD_PUNC']
+        question.PunctuationIndex = punctuation_index = punctuations[-1]
+
+        #Fetch compound words from the dictionary and count their matches against question words
+        compound_words = Dictionary.objects.filter(CompoundWord=True)
+        question_words = question.QuestionText.split(' ')
+        compound_words_count = len([match for match in question_words if match in compound_words])
 
         all_named_entities = [dict.Word for dict in Dictionary.objects.filter(NamedEntity=True)]
-        current_named_entities = [m for m in words if m in all_named_entities]
+        current_named_entities = [m for m in question_words if m in all_named_entities]
 
         named_entity_types = [ne.name for ne in NamedEntityType.objects.filter(dictionary__Word__in=current_named_entities).distinct()]
 
-        X1 = len([ne for ne in words if ne in current_named_entities])
-        Y1 = len(set(named_entity_types))
-        X2 = len(set(words))
-        Y2 = len(set(parts))
-        X3 = X1 * Y1
-        Y3 = len(set(named_entity_types))
-        question.ReadabilityIndex = 0.4 * ( (len(words) / 1) + 100 * (comp_count / len(words)))
-
-        Nlex = parts.count('N_NN') + parts.count('N_NNP') + parts.count('V_VM') + parts.count('V_VM_VNF') + parts.count('V_VM_VINF') + parts.count('V_VM_VNG') + parts.count('V_VAUX') + parts.count('JJ') + parts.count('RB')
-        question.LexicalDensity = "%.2f" % round( Nlex / len(parts), 2)
-
-        question.cogX = ((float(X1) * float(question.LexicalDensity)) + (float(X2) * float(question.ReadabilityIndex)) + (float(X3) * float(question.PunctuationIndex) ) ) / (float(question.LexicalDensity) + float(question.ReadabilityIndex) + float(question.PunctuationIndex))
-        question.cogY = ((float(Y1) * float(question.LexicalDensity)) + (float(Y2) * float(question.ReadabilityIndex)) + (float(Y3) * float(question.PunctuationIndex) ) ) / (float(question.LexicalDensity) + float(question.ReadabilityIndex) + float(question.PunctuationIndex))
-        question.center_of_gravity = ujson.dumps([question.cogX,question.cogY])
-
-        questiondata = [
-            ['X','Y'],
-            [X1,Y1],
-            [X2,Y3],
-            [X3,Y3]
-        ]
-
-        xdata = [X1,X2,X3]
-        ydata = [Y1,Y2,Y3]
-        cogdata = [question.cogX, question.cogY]
-
-        dataset = [
-            {
-                'label': 'Points',
-                'data': xdata,
-                'points': {'symbol': "circle", 'fillColor': "#FF0000", 'show': 'true'},
-                'lines': {'show': 'true'},
-            },
-            {
-                'label': 'COG',
-                'data': ydata,
-                'points': {'symbol': "triangle", 'fillColor': "#FF0000", 'show': 'true'},
-            }
-        ]
-
-        graph = flot.PointChart(SimpleDataSource(data=questiondata))
-
-        testtext = question.QuestionText
-        from nltk.corpus import stopwords
-
-        #nltk.word_tokenize vs split
-        testwords = testtext.split(' ')
-
-        def find_all(str, substr):
-            start = 0
-            while True:
-                start = str.find(substr,start)
-                if start == -1:return
-                yield start
-                start += len(substr)  # use len(substr) for non overlapping matches
+        question_cog = cogm.calculate_cogm(question_words, punctuation_index, compound_words_count, named_entity_types, tag_parts, current_named_entities)
+        question.center_of_gravity = question_cog
 
 
-        filtered = [word for word in words if word not in stopwords.words('punjabi')]
+        # Break paragraph into sentences
+        sentences = [s.strip() + " |" for s in comprehension.ComprehensionsText.split('|')]
+        del sentences[-1]
+
+        answers = []
+        tags = []
+        answers_cog_list = []
+        for sentence_index, sentence in enumerate(sentences):
+
+            sentence_words = sentence.split()
+
+            sentence_compound_words_count = len([match for match in sentence_words if match in compound_words])
+
+            sentence_named_entities = [m for m in sentence_words if m in all_named_entities]
+            sentence_named_entity_types = [ne.name for ne in NamedEntityType.objects.filter(dictionary__Word__in=sentence_named_entities).distinct()]
+
+            # Split Question tags string into individual tags
+            tag_parts = [Dictionary.objects.filter(Word=w).values_list('WordType', flat=True) for w in sentence_words]
+
+            sentence_tags = []
+            for part in tag_parts:
+                for p in part:
+                    sentence_tags.append(p)
+
+            #sentence_tags.append('RD_PUNC')
+
+            # temporay variable to print tags on webpage
+            tags.append(sentence_tags)
+
+            #Find Punctuation Index (W3)
+            punctuations = [iter + 1 for iter, punc in enumerate(sentence_tags) if punc == 'RD_PUNC']
+
+            punctuation_index = punctuations[-1]
+            #print sentence_compound_words_count
+            sentence_cog = cogm.calculate_cogm(sentence_words, punctuation_index, sentence_compound_words_count, sentence_named_entity_types, sentence_tags, sentence_named_entities)
+
+            bonus_value = bonus.get_bonus(question_words, sentence_words)
+            cogX = sentence_cog[0]+ bonus_value
+            cogY = sentence_cog[1] + bonus_value
+
+            # 0-sentence, 1-cogx, 2-cogy, 3-cog pair, 4-sentence_index, 5-lexical_density 6-readability_index, 7-punctuation_index
+            probable_answer = [sentence, cogX , cogY, [cogX,cogY], sentence_index + 1, sentence_cog[2], sentence_cog[3], punctuation_index]
+
+            # answer.AnswerText = sentence
+            # answer.cogX = sentence_cog[0]
+            # answer.cogY = sentence_cog[1]
+            #
+            # answer.center_of_gravity = [sentence_cog[0],sentence_cog[1]]
+            #
+            # answer.SentenceIndex = sentence_index+1
+            # answer.LexicalDensity = sentence_cog[2]
+            # answer.ReadabilityIndex = sentence_cog[3]
+            # answer.PunctuationIndex = punctuation_index
+
+            answers_cog_list.append([cogX,cogY])
+            #print sentence
+            answers.append(probable_answer)
+
+        answers_cog = np.array(answers_cog_list)
+        #print answers_cog
+        #random.shuffle(answers)
+
+        nearest_answer = cogm.find_nearest_vector(answers_cog, [question_cog[0], question_cog[1]])
+        print nearest_answer
+
+        # questiondata = [
+        #     ['X','Y'],
+        #     [X1,Y1],
+        #     [X2,Y3],
+        #     [X3,Y3]
+        # ]
+        #
+        # xdata = [X1,X2,X3]
+        # ydata = [Y1,Y2,Y3]
+        # cogdata = [question.cogX, question.cogY]
+        #
+        # dataset = [
+        #     {
+        #         'label': 'Points',
+        #         'data': xdata,
+        #         'points': {'symbol': "circle", 'fillColor': "#FF0000", 'show': 'true'},
+        #         'lines': {'show': 'true'},
+        #     },
+        #     {
+        #         'label': 'COG',
+        #         'data': ydata,
+        #         'points': {'symbol': "triangle", 'fillColor': "#FF0000", 'show': 'true'},
+        #     }
+        # ]
+        #
+        # graph = flot.PointChart(SimpleDataSource(data=questiondata))
+        #
+        # testtext = question.QuestionText
+        # from nltk.corpus import stopwords
+        #
+        # #nltk.word_tokenize vs split
+        # testwords = testtext.split(' ')
+        #
+        # def find_all(str, substr):
+        #     start = 0
+        #     while True:
+        #         start = str.find(substr,start)
+        #         if start == -1:return
+        #         yield start
+        #         start += len(substr)  # use len(substr) for non overlapping matches
+
+
+    #    filtered = [word for word in words if word not in stopwords.words('punjabi')]
     #    patterns = [re.compile(re.escape(f)) for f in filtered if filtered]
     #    ##text = [(f.start(), f.end()) for f in list(re.finditer(ww, comprehension.ComprehensionsText))]
     #    patt = re.compile(ww)
     #   text = [m.start() for m in re.finditer(ww, comprehension.ComprehensionsText)]
     #   text = re.match(patt, comprehension.ComprehensionsText)
-        patterns = [re.compile(re.escape(f)) for f in filtered]
+    #    patterns = [re.compile(re.escape(f)) for f in filtered]
 
         # hints = []
         # lengths = []
@@ -221,4 +263,6 @@ def questiondetail(request, question_id):
 
     except Question.DoesNotExist:
         raise Http404('Question does not exist')
-    return render(request,  'qa/questiondetail.html', {'comprehension': comprehension, 'question': question, 'X':[X1,X2,X3], 'Y':[Y1,Y2,Y3], 'graph': graph, 'filtered': filtered, 'question_types': question_types})
+    #return render(request,  'qa/questiondetail.html', {'comprehension': comprehension, 'question': question, 'X':[X1,X2,X3], 'Y':[Y1,Y2,Y3], 'graph': graph, 'question_types': question_types})
+    return render(request, 'qa/questiondetail.html',
+                  {'comprehension': comprehension, 'question': question, 'question_types': question_types, 'answers': answers, 'tags': tags})

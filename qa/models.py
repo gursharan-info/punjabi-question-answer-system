@@ -42,20 +42,20 @@ class Comprehension(models.Model):
 
         #Splits the main comprehension passage into sentences of probable answers
 
-        # compseperator = "|"
-        # Comp = re.sub(r'([\'\"])', '', self.ComprehensionsText.strip() )
-        # AnswerList = [e.strip() + compseperator for e in Comp.split(compseperator) if e != ""]
-        #
-        # tagseperator = "|\RD_PUNC"
-        # TaggedComp = self.ComprehensionTagged.strip()
-        # TaggedAnswerList = [re.sub(r'([^A-Z_a-z\\])', '', f.strip()) + re.sub(r'([\|])', '', tagseperator) for f in TaggedComp.split(tagseperator) if f != ""]
-        #
-        # for i,(sentence, taggedanswer) in enumerate(zip(AnswerList, TaggedAnswerList)):
-        #     try:
-        #         obj, created = Answer.objects.get_or_create(AnswerText = sentence, AnswerTagsOnly = taggedanswer, Comprehension = self, SentenceIndex = i+1)
-        #     except Exception as e:
-        #        print e
-        #     #d = Answer.objects.update_or_create(AnswerTagsOnly = taggedanswer, ComprehensionAnswer = self, SentenceIndex = i+1)
+        compseperator = "|"
+        Comp = re.sub(r'([\'\"])', '', self.ComprehensionsText.strip() )
+        AnswerList = [e.strip() + compseperator for e in Comp.split(compseperator) if e != ""]
+
+        tagseperator = "|\RD_PUNC"
+        TaggedComp = self.ComprehensionTagged.strip()
+        TaggedAnswerList = [re.sub(r'([^A-Z_a-z\\])', '', f.strip()) + re.sub(r'([\|])', '', tagseperator) for f in TaggedComp.split(tagseperator) if f != ""]
+
+        for i,(sentence, taggedanswer) in enumerate(zip(AnswerList, TaggedAnswerList)):
+            try:
+                obj, created = Answer.objects.get_or_create(AnswerText = sentence, AnswerTagsOnly = taggedanswer, Comprehension = self, SentenceIndex = i+1)
+            except Exception as e:
+               print e
+            #d = Answer.objects.update_or_create(AnswerTagsOnly = taggedanswer, ComprehensionAnswer = self, SentenceIndex = i+1)
 
         super(Comprehension, self).save(*args, **kwargs)
 
@@ -67,7 +67,7 @@ class QuestionType(models.Model):
 
 class Question(models.Model):
     QuestionText = models.CharField(max_length=500, verbose_name='Question Text')
-    QuestionTypeID = models.ManyToManyField(QuestionType, verbose_name='Question Type')
+    QuestionTypeID = models.ManyToManyField(QuestionType, verbose_name='Question Type', related_name='questiontypes')
     QuestionTagged = models.CharField(max_length=500, verbose_name='pos tagged text', null=True, blank=True)
     QuestionTagsOnly = models.CharField(max_length=500, verbose_name='pos tags', null=True, blank=True)
     Comprehension = models.ForeignKey(Comprehension, verbose_name='comprehension', null=True)
@@ -187,7 +187,7 @@ class Dictionary(models.Model):
     StemmedWord = models.CharField(max_length=200, verbose_name='stemmed word', null=True)
     NamedEntity = models.BooleanField(default=False, verbose_name='named entity')
     NamedEntityTypeID = models.ManyToManyField(NamedEntityType, verbose_name='named entity type', blank=True)
-    CompoundWord = models.BooleanField(default=False, verbose_name='compound word')
+    CompoundWord = models.BooleanField(default=False, verbose_name='complex word')
     DictionarySet = models.ForeignKey(DictionarySet, verbose_name='dictionary set', null=True)
     LastUpdate = models.DateTimeField(auto_now=True)
     class Meta:

@@ -10,5 +10,6 @@ urlpatterns = [
     url(r'^question/(?P<question_id>[0-9]+)/$', views.questiondetail, name='questiondetail'),
     url(r'^dictionary/$', views.dictionary, name='dictionary'),
     url(r'^patterns/$', views.patterns, name='patterns'),
+    url(r'^questions/$', views.questions, name='questions'),
     url(r'^toppatterns/$', views.top_patterns, name='toppatterns'),
 ]

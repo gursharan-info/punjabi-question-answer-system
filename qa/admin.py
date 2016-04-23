@@ -30,7 +30,7 @@ class QuestionAdmin(admin.ModelAdmin):
 class QuestionInline(admin.TabularInline):  # Similar to book in example github page
     fields = ('QuestionText', 'QuestionTypeID','QuestionTagged', 'QuestionTagsOnly', 'QuestionRemarks')
     model = Question
-    extra = 4
+    extra = 0
 
 class AnswerInline(admin.TabularInline):   # Similar to Press in github page
     model = Answer
@@ -66,13 +66,13 @@ class DictionaryAdmin(admin.ModelAdmin):
     search_fields = ['WordType', 'Word']
     list_filter = ['WordType', 'NamedEntity']
     list_display = ['Word', 'WordType', 'StemmedWord', 'LastUpdate']
-    fields = ('Word', 'WordType', 'NamedEntity', 'NamedEntityTypeID')
+    fields = ('Word', 'WordType', 'NamedEntity', 'NamedEntityTypeID', 'CompoundWord')
 
-class DictionaryInline(admin.TabularInline):  # Similar to book in example github page
+class DictionaryInline(admin.TabularInline):
     model = Dictionary
-    extra = 1
+    extra = 0
 
-class DictionaryInlineforNE(admin.TabularInline):  # Similar to book in example github page
+class DictionaryInlineforNE(admin.TabularInline):
     model = Dictionary.NamedEntityTypeID.through
     extra = 1
     verbose_name = "Word"

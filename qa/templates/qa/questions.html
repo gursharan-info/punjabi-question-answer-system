@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="text-center"><a href="{% url 'qa:toppatterns' %}">Questions</a></h3>
+
+{% for question in questions %}
+
+<table class="table table-striped">
+    <thead>
+        <th>{{question|last}}</th>
+        <th>Pattern</th>
+    </thead>
+    <tbody>
+        {% for value in question|first %}
+
+            <tr>
+                <td>{{value}}</td>
+                <td>{{value.QuestionTagged}}</td>
+            </tr>
+
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endfor %}
+
+
+{% for type in types %}
+    <br>{{type}}
+{% endfor %}
+{% endblock %}
