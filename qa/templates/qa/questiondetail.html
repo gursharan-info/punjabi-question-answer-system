@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% load staticfiles %}
 <div class="row">
     <h3>Comprehension - {{ comprehension.ComprehensionTitle }}</h3>
     <p>{{ comprehension.ComprehensionsText }}</p>
@@ -26,10 +27,10 @@
                         {{q}}
                     {% endfor %}
                 </td>
-                <td>{{question.center_of_gravity.2}}</td>
-                <td>{{question.center_of_gravity.3}}</td>
-                <td>{{question.PunctuationIndex}}</td>
-                <td>X = {{question.center_of_gravity.0}}, Y = {{question.center_of_gravity.1}} <!--= {{question.center_of_gravity}}--></td>
+                <td>{{question.center_of_gravity.lexical_density}}</td>
+                <td>{{question.center_of_gravity.readability_index}}</td>
+                <td>{{question.center_of_gravity.punctuation_index}}</td>
+                <td>X = {{question.center_of_gravity.cogX}}, Y = {{question.center_of_gravity.cogY}} <!--= {{question.center_of_gravity}}--></td>
             </tr>
         </tbody>
     </table>
@@ -43,6 +44,7 @@
                     <tr>
                         <th>Sentence</th>
                         <th>Sentence Index</th>
+                        <th>(X1,Y1)(X2,Y2)(X3,Y3)</th>
                         <th>Lexical Density</th>
                         <th>Readability Index</th>
                         <th>Punctuation Index</th>
@@ -52,12 +54,17 @@
                 <tbody>
                         {%for answer in answers %}
                             <tr>
-                                <td>{{answer.0}}</td>
-                                <td>{{answer.4}}</td>
-                                <td>{{answer.5|floatformat:6}}</td>
-                                <td>{{answer.6}}</td>
-                                <td>{{answer.7}}</td>
-                                <td>X={{answer.1|floatformat:6}} <br> Y={{answer.2|floatformat:6}}</td>
+                                <td>{{answer.sentence}}</td>
+                                <td>{{answer.sentence_index}}</td>
+                                <td>
+                                    ({{answer.sentence_cog.X1}},{{answer.sentence_cog.Y1}})<br>
+                                    ({{answer.sentence_cog.X2}},{{answer.sentence_cog.Y2}})<br>
+                                    ({{answer.sentence_cog.X3}},{{answer.sentence_cog.Y3}})
+                                </td>
+                                <td>{{answer.lexical_density|floatformat:6}}</td>
+                                <td>{{answer.readability_index}}</td>
+                                <td>{{answer.punctuation_index}}</td>
+                                <td>X={{answer.cogX|floatformat:6}} <br> Y={{answer.cogY|floatformat:6}}</td>
                             </tr>
                         {% endfor %}
                 </tbody>
@@ -65,16 +72,21 @@
         </dd>
     </dl>
 </div>
-{% for tag in tags %}
+<!--{% for tag in tags %}
     {% for t in tag %}
         {{t}}, &nbsp;
     {% endfor %}<br>
-{% endfor %}
+{% endfor %}-->
 
-{{X}}<br>
-{{Y}}<br>
+<!--{{ graph.as_html }}-->
 
-{{ graph.as_html }}
+<input type="hidden" id="q_cog" value="{{q_cog_dump}}">
+
+
+<div id="question_graph" align="center" style="min-height: 500px;"></div>
+
+<input type="hidden" id="a_cog" value="{{answers_dump}}">
+
 
 {% for f in filtered %}
     {{f}}<br>

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, division
 import numpy as np
+import math
 
 # Calculates CoGM (Center of Gravity Metric) value
 
@@ -23,9 +24,14 @@ def calculate_cogm(words, punctuation_index, compound_words_count, named_entity_
     cogY = ((float(Y1) * float(lexical_density)) + (float(Y2) * float(readability_index)) + (float(Y3) * float(punctuation_index))) / (float(lexical_density) + float(readability_index) + float(punctuation_index))
     #print [cogX, cogY]
 
-    return [cogX, cogY, lexical_density, readability_index, punctuation_index]
+    cogm = {'X1': X1, 'X2': X2,'X3': X3,'Y1': Y1,'Y2': Y2,'Y3': Y3,'cogX': cogX, 'cogY':cogY, 'lexical_density': lexical_density, 'readability_index': readability_index, 'punctuation_index': punctuation_index}
+    return cogm
 
 
 def find_nearest_vector(array, value):
     idx = np.array([np.linalg.norm(x+y) for (x,y) in array-value]).argmin()
     return array[idx]
+
+def euclidean_distance(X1, Y1, X2, Y2):
+    dist =  math.sqrt(math.pow((X2 - X1), 2) + math.pow((Y2 -Y1), 2))
+    return dist

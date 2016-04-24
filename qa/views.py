@@ -19,7 +19,7 @@ import numpy as np
 import cogm
 import bonus
 import random
-
+from operator import itemgetter
 # Create your views here.
 
 
@@ -110,7 +110,7 @@ def questiondetail(request, question_id):
 
         # Find Punctuation Index (W3)
         punctuations = [i+1 for i, x in enumerate(tag_parts) if x == 'RD_PUNC']
-        question.PunctuationIndex = punctuation_index = punctuations[-1]
+        punctuation_index = punctuations[-1]
 
         #Fetch compound words from the dictionary and count their matches against question words
         compound_words = Dictionary.objects.filter(CompoundWord=True)
@@ -120,17 +120,20 @@ def questiondetail(request, question_id):
         all_named_entities = [dict.Word for dict in Dictionary.objects.filter(NamedEntity=True)]
         current_named_entities = [m for m in question_words if m in all_named_entities]
 
-        named_entity_types = [ne.name for ne in NamedEntityType.objects.filter(dictionary__Word__in=current_named_entities).distinct()]
+        question_named_entity_types = [ne.name for ne in NamedEntityType.objects.filter(dictionary__Word__in=current_named_entities).distinct()]
 
-        question_cog = cogm.calculate_cogm(question_words, punctuation_index, compound_words_count, named_entity_types, tag_parts, current_named_entities)
+        question_cog = cogm.calculate_cogm(question_words, punctuation_index, compound_words_count, question_named_entity_types, tag_parts, current_named_entities)
         question.center_of_gravity = question_cog
+        question_cog['question'] = question.QuestionText
+        question_cog['question_tagged'] = tag_parts
+        #print "q= ", question_cog
 
 
         # Break paragraph into sentences
         sentences = [s.strip() + " |" for s in comprehension.ComprehensionsText.split('|')]
         del sentences[-1]
 
-        answers = []
+        probable_answers = []
         tags = []
         answers_cog_list = []
         for sentence_index, sentence in enumerate(sentences):
@@ -141,6 +144,8 @@ def questiondetail(request, question_id):
 
             sentence_named_entities = [m for m in sentence_words if m in all_named_entities]
             sentence_named_entity_types = [ne.name for ne in NamedEntityType.objects.filter(dictionary__Word__in=sentence_named_entities).distinct()]
+
+            # print sentence_named_entity_types
 
             # Split Question tags string into individual tags
             tag_parts = [Dictionary.objects.filter(Word=w).values_list('WordType', flat=True) for w in sentence_words]
@@ -162,12 +167,8 @@ def questiondetail(request, question_id):
             #print sentence_compound_words_count
             sentence_cog = cogm.calculate_cogm(sentence_words, punctuation_index, sentence_compound_words_count, sentence_named_entity_types, sentence_tags, sentence_named_entities)
 
-            bonus_value = bonus.get_bonus(question_words, sentence_words)
-            cogX = sentence_cog[0]+ bonus_value
-            cogY = sentence_cog[1] + bonus_value
-
-            # 0-sentence, 1-cogx, 2-cogy, 3-cog pair, 4-sentence_index, 5-lexical_density 6-readability_index, 7-punctuation_index
-            probable_answer = [sentence, cogX , cogY, [cogX,cogY], sentence_index + 1, sentence_cog[2], sentence_cog[3], punctuation_index]
+            # returned 0-sentence, 1-cogx, 2-cogy, 3-cog pair, 4-sentence_index, 5-lexical_density 6-readability_index, 7-punctuation_index
+            #bonus_value = bonus.get_bonus(question_words, sentence_words)
 
             # answer.AnswerText = sentence
             # answer.cogX = sentence_cog[0]
@@ -179,43 +180,55 @@ def questiondetail(request, question_id):
             # answer.LexicalDensity = sentence_cog[2]
             # answer.ReadabilityIndex = sentence_cog[3]
             # answer.PunctuationIndex = punctuation_index
-
-            answers_cog_list.append([cogX,cogY])
+            euclidean_distance = cogm.euclidean_distance(sentence_cog['cogX'], sentence_cog['cogY'], question_cog['cogX'], question_cog['cogY'])
+            # print sentence_cog['cogX'], sentence_cog['cogY']
+            print euclidean_distance
+            bonus_value = bonus.get_bonus(question_words, question_named_entity_types, sentence_words, sentence_named_entity_types, sentence_tags)
+            print bonus_value
+            # bonus_value = 1
+            probable_answer = {'sentence': sentence, 'sentence_tags': sentence_tags,'cogX': sentence_cog['cogX'], 'cogY': sentence_cog['cogY'], 'cog': [sentence_cog['cogX'], sentence_cog['cogY']],
+                               'sentence_index': sentence_index + 1, 'lexical_density': sentence_cog['lexical_density'],
+                               'readability_index': sentence_cog['readability_index'], 'punctuation_index': punctuation_index, 'euclidean_distance': euclidean_distance, 'bonus': bonus_value, 'sentence_cog': sentence_cog }
+            #print probable_answer
+            answers_cog_list.append([sentence_cog['cogX'],sentence_cog['cogY']])
             #print sentence
-            answers.append(probable_answer)
-
+            probable_answers.append(probable_answer)
+        # answers = sorted(probable_answers, key=itemgetter('euclidean_distance'), reverse=True)
+        answers = probable_answers
         answers_cog = np.array(answers_cog_list)
         #print answers_cog
         #random.shuffle(answers)
 
-        nearest_answer = cogm.find_nearest_vector(answers_cog, [question_cog[0], question_cog[1]])
-        print nearest_answer
+        nearest_answer = cogm.find_nearest_vector(answers_cog, [question_cog['cogX'], question_cog['cogY']])
+        #print nearest_answer
 
         # questiondata = [
         #     ['X','Y'],
-        #     [X1,Y1],
-        #     [X2,Y3],
-        #     [X3,Y3]
+        #     [question_cog['X1'],question_cog['Y1']],
+        #     [question_cog['X2'],question_cog['Y3']],
+        #     [question_cog['X3'],question_cog['Y3']],
         # ]
+        # print questiondata
         #
         # xdata = [X1,X2,X3]
         # ydata = [Y1,Y2,Y3]
         # cogdata = [question.cogX, question.cogY]
         #
-        # dataset = [
+        # options = [
         #     {
         #         'label': 'Points',
-        #         'data': xdata,
+        #         'data': questiondata,
         #         'points': {'symbol': "circle", 'fillColor': "#FF0000", 'show': 'true'},
-        #         'lines': {'show': 'true'},
+        #         'lines': {'show': 'false'},
         #     },
         #     {
-        #         'label': 'COG',
-        #         'data': ydata,
-        #         'points': {'symbol': "triangle", 'fillColor': "#FF0000", 'show': 'true'},
+        #         'label': 'Points',
+        #         'data': [question_cog['cogX'], question_cog['cogY']],
+        #         'points': {'symbol': "circle", 'fillColor': "#FF0000", 'show': 'true'},
+        #         'lines': {'show': 'false'},
         #     }
         # ]
-        #
+
         # graph = flot.PointChart(SimpleDataSource(data=questiondata))
         #
         # testtext = question.QuestionText
@@ -265,4 +278,4 @@ def questiondetail(request, question_id):
         raise Http404('Question does not exist')
     #return render(request,  'qa/questiondetail.html', {'comprehension': comprehension, 'question': question, 'X':[X1,X2,X3], 'Y':[Y1,Y2,Y3], 'graph': graph, 'question_types': question_types})
     return render(request, 'qa/questiondetail.html',
-                  {'comprehension': comprehension, 'question': question, 'question_types': question_types, 'answers': answers, 'tags': tags})
+                  {'comprehension': comprehension, 'question': question, 'q_cog_dump': ujson.dumps(question_cog), 'question_types': question_types, 'answers': answers, 'answers_dump': ujson.dumps(answers), 'tags': tags})
