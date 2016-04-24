@@ -12,18 +12,32 @@ def get_bonus(question_words, question_named_entity_types, sentence_words, sente
         bonus = matches
 
     if "ਕੌਣ" in question_words:
+        if ("person" in sentence_named_entity_types) or ("organization" in sentence_named_entity_types):
+            print 'yes'
         bonus += 1
     elif "ਕਿਸ" in question_words:
+        if ("person" in sentence_named_entity_types) or ("organization" in sentence_named_entity_types):
+            print 'yes'
         bonus += 1
     elif "ਕਿਸੇ" in question_words:
+        if ("person" in sentence_named_entity_types) or ("organization" in sentence_named_entity_types):
+            print 'yes'
         bonus += 1
     elif "ਕੀ" in question_words:
+        if ("object" in sentence_named_entity_types):
+            print 'yes'
         bonus += 1
     elif "ਕਦੋਂ" in question_words:
+        if ("time" in sentence_named_entity_types) or ("date" in sentence_named_entity_types):
+            print 'yes'
         bonus += 1
     elif "ਕਿੱਥੇ" in question_words:
+        if ("location" in sentence_named_entity_types):
+            print 'yes'
         bonus += 1
     elif "ਕਿੱਥੋਂ" in question_words:
+        if ("location" in sentence_named_entity_types):
+            print 'yes'
         bonus += 1
     elif "ਕਿਹੜੇ" in question_words:
         bonus += 1
@@ -34,14 +48,20 @@ def get_bonus(question_words, question_named_entity_types, sentence_words, sente
     elif "ਕਿਉਂ" in question_words:
         bonus += 1
     elif "ਕਿੰਨਾ" in question_words:
+        if ("quantity" in sentence_named_entity_types) or ("numbers" in sentence_named_entity_types):
+            print 'yes'
         bonus += 1
     elif "ਕਿੰਨੀ" in question_words:
+        if ("quantity" in sentence_named_entity_types) or ("numbers" in sentence_named_entity_types):
+            print 'yes'
         bonus += 1
     elif "ਕਿੰਨੇ" in question_words:
         if ("quantity" in sentence_named_entity_types) or ("numbers" in sentence_named_entity_types):
             print 'yes'
         bonus += 1
     elif "ਕਿੰਨੀਆਂ" in question_words:
+        if ("quantity" in sentence_named_entity_types) or ("numbers" in sentence_named_entity_types):
+            print 'yes'
         bonus += 1
 
 
