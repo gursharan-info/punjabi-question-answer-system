@@ -11,5 +11,7 @@ urlpatterns = [
     url(r'^dictionary/$', views.dictionary, name='dictionary'),
     url(r'^patterns/$', views.patterns, name='patterns'),
     url(r'^questions/$', views.questions, name='questions'),
+    url(r'^sentences/$', views.sentences, name='sentences'),
     url(r'^toppatterns/$', views.top_patterns, name='toppatterns'),
+    url(r'^testing/$', views.testing, name='testing'),
 ]

@@ -13,8 +13,8 @@
         {% for value in question|first %}
 
             <tr>
-                <td>{{value}}</td>
-                <td>{{value.QuestionTagged}}</td>
+                <td><a class="clickable-div" href="{% url 'qa:questiondetail' value.id %}">{{value.QuestionText}}</a></td>
+                <td>{{value.QuestionTagged}} </td>
             </tr>
 
         {% endfor %}

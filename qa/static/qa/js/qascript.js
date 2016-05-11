@@ -1,4 +1,4 @@
-    $(document).ready(function() {
+$(document).ready(function() {
 
     question = $.parseJSON($('#q_cog').val());
     //console.log( question );

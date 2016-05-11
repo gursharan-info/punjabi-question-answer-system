@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="text-center">Sentences</h3>
+{% for comp in comprehensions %}
+<table class="table table-striped">
+    <thead>
+        <th>Sentence</th>
+    </thead>
+    <tbody>
+    {% for sentence in comp %}
+        <tr>
+            <td>{{sentence}} |</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endfor %}
+{% endblock %}

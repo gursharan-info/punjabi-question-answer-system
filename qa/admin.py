@@ -6,7 +6,8 @@ import re
 
 # Register your models here.
 
-from .models import Question, Answer, AnswerType, QuestionType, Comprehension, Dictionary, Patterns, IndependentQuestion, IndependentQuestionSet, DictionarySet, NamedEntityType
+#from .models import Question, Answer, AnswerType, QuestionType, Comprehension, Dictionary, Patterns, IndependentQuestion, IndependentQuestionSet, DictionarySet, NamedEntityType
+from .models import Question, QuestionType, Comprehension, Dictionary, Patterns, IndependentQuestion, IndependentQuestionSet, DictionarySet, NamedEntityType
 
 class ComprehensionForm(forms.ModelForm):
     model = Comprehension
@@ -14,7 +15,7 @@ class ComprehensionForm(forms.ModelForm):
 class QuestionForm(forms.ModelForm):
     model = Question
 
-    def clean(self, value):
+    def clean(self):
         cleaned_data = self.cleaned_data
 
         QTaggsOnly = re.sub(r'([^A-Z_a-z\\])', '', cleaned_data['QuestionTagged'].strip())
@@ -30,19 +31,20 @@ class QuestionAdmin(admin.ModelAdmin):
 class QuestionInline(admin.TabularInline):  # Similar to book in example github page
     fields = ('QuestionText', 'QuestionTypeID','QuestionTagged', 'QuestionTagsOnly', 'QuestionRemarks')
     model = Question
-    extra = 0
+    extra = 4
 
-class AnswerInline(admin.TabularInline):   # Similar to Press in github page
-    model = Answer
-    #formset = ComprehensionFormSet
-   # extra = 2
+# class AnswerInline(admin.TabularInline):   # Similar to Press in github page
+#     model = Answer
+#     #formset = ComprehensionFormSet
+#    # extra = 2
 
-class AnswerAdmin(admin.ModelAdmin):
-    list_display = ('AnswerText', 'Comprehension', 'SentenceIndex', 'LastUpdate')
-    list_filter = ['Comprehension']
-    search_fields = ['AnswerText']
+# class AnswerAdmin(admin.ModelAdmin):
+#     list_display = ('AnswerText', 'Comprehension', 'SentenceIndex', 'LastUpdate')
+#     list_filter = ['Comprehension']
+#     search_fields = ['AnswerText']
 
 class ComprehensionAdmin(admin.ModelAdmin):
+    search_fields = ['ComprehensionsText']
     form = ComprehensionForm
 
     fieldsets = [
@@ -58,8 +60,8 @@ class QuestionTypeAdmin(admin.ModelAdmin):
 
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(QuestionType, QuestionTypeAdmin)
-admin.site.register(AnswerType)
-admin.site.register(Answer, AnswerAdmin)
+# admin.site.register(AnswerType)
+# admin.site.register(Answer, AnswerAdmin)
 admin.site.register(Comprehension, ComprehensionAdmin)
 
 class DictionaryAdmin(admin.ModelAdmin):

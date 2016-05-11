@@ -42,20 +42,20 @@ class Comprehension(models.Model):
 
         #Splits the main comprehension passage into sentences of probable answers
 
-        compseperator = "|"
-        Comp = re.sub(r'([\'\"])', '', self.ComprehensionsText.strip() )
-        AnswerList = [e.strip() + compseperator for e in Comp.split(compseperator) if e != ""]
-
-        tagseperator = "|\RD_PUNC"
-        TaggedComp = self.ComprehensionTagged.strip()
-        TaggedAnswerList = [re.sub(r'([^A-Z_a-z\\])', '', f.strip()) + re.sub(r'([\|])', '', tagseperator) for f in TaggedComp.split(tagseperator) if f != ""]
-
-        for i,(sentence, taggedanswer) in enumerate(zip(AnswerList, TaggedAnswerList)):
-            try:
-                obj, created = Answer.objects.get_or_create(AnswerText = sentence, AnswerTagsOnly = taggedanswer, Comprehension = self, SentenceIndex = i+1)
-            except Exception as e:
-               print e
-            #d = Answer.objects.update_or_create(AnswerTagsOnly = taggedanswer, ComprehensionAnswer = self, SentenceIndex = i+1)
+        # compseperator = "|"
+        # Comp = re.sub(r'([\'\"])', '', self.ComprehensionsText.strip() )
+        # AnswerList = [e.strip() + compseperator for e in Comp.split(compseperator) if e != ""]
+        #
+        # tagseperator = "|\RD_PUNC"
+        # TaggedComp = self.ComprehensionTagged.strip()
+        # TaggedAnswerList = [re.sub(r'([^A-Z_a-z\\])', '', f.strip()) + re.sub(r'([\|])', '', tagseperator) for f in TaggedComp.split(tagseperator) if f != ""]
+        #
+        # for i,(sentence, taggedanswer) in enumerate(zip(AnswerList, TaggedAnswerList)):
+        #     try:
+        #         obj, created = Answer.objects.get_or_create(AnswerText = sentence, AnswerTagsOnly = taggedanswer, Comprehension = self, SentenceIndex = i+1)
+        #     except Exception as e:
+        #        print e
+        #     #d = Answer.objects.update_or_create(AnswerTagsOnly = taggedanswer, ComprehensionAnswer = self, SentenceIndex = i+1)
 
         super(Comprehension, self).save(*args, **kwargs)
 
@@ -71,12 +71,12 @@ class Question(models.Model):
     QuestionTagged = models.CharField(max_length=500, verbose_name='pos tagged text', null=True, blank=True)
     QuestionTagsOnly = models.CharField(max_length=500, verbose_name='pos tags', null=True, blank=True)
     Comprehension = models.ForeignKey(Comprehension, verbose_name='comprehension', null=True)
-    LexicalDensity = models.FloatField(null=True, blank=True)
-    ReadabilityIndex = models.FloatField(null=True, blank=True)
-    PunctuationIndex = models.CharField(max_length=200, verbose_name='punctuation index', default='0', null=True)
-    cogX = models.FloatField(default=0, null=True)
-    cogY = models.FloatField(default=0, null=True)
-    center_of_gravity = models.FloatField(default=0,null=True)
+    # LexicalDensity = models.FloatField(null=True, blank=True)
+    # ReadabilityIndex = models.FloatField(null=True, blank=True)
+    # PunctuationIndex = models.CharField(max_length=200, verbose_name='punctuation index', default='0', null=True)
+    # cogX = models.FloatField(default=0, null=True)
+    # cogY = models.FloatField(default=0, null=True)
+    # center_of_gravity = models.FloatField(default=0,null=True)
     QuestionRemarks = models.CharField(max_length=500, verbose_name='remarks', null=True, blank=True)
     LastUpdate = models.DateTimeField(auto_now=True)
     def __unicode__(self):
@@ -136,39 +136,39 @@ class IndependentQuestion(models.Model):
 
         super(IndependentQuestion, self).save(*args, **kwargs)
 
-class AnswerType(models.Model):
-    AnswerType = models.CharField(max_length=100, verbose_name='Answer Type')
-    AnswerTypeDesc = models.CharField(max_length=200, verbose_name='Description of Answer Type')
-    def __unicode__(self):
-        return self.AnswerType
-
-class Answer(models.Model):
-    ##AnswerTypeID = models.ForeignKey(AnswerType, verbose_name='Answer Type')
-    AnswerText = models.CharField(max_length=500, verbose_name='Answer Text')
-    AnswerTypeID = models.ManyToManyField(AnswerType, verbose_name='Answer Type', blank=True)
-    AnswerTagsOnly = models.CharField(max_length=500, verbose_name='pos tags', null=True, blank=True)
-    Comprehension = models.ForeignKey(Comprehension, verbose_name='Comprehension', null=True)
-    SentenceIndex = models.IntegerField(default = 0)
-    LexicalDensity = models.FloatField()
-    ReadabilityIndex = models.FloatField()
-    PunctuationIndex = models.CharField(max_length=200, verbose_name='punctuation index', default='0')
-    cogX = models.FloatField(default=0)
-    cogY = models.FloatField(default=0)
-    center_of_gravity = models.FloatField(default=0)
-    AnswerRemarks = models.CharField(max_length=500, verbose_name='Remarks', blank=True)
-    LastUpdate = models.DateTimeField(auto_now=True)
-    def __unicode__(self):
-        return self.AnswerText
-
-    def save(self, *args, **kwargs):
-        parts = self.AnswerTagsOnly.split('\\')
-
-        punctuations = [i+1 for i, x in enumerate(parts) if x == 'RD_PUNC']
-        self.PunctuationIndex = ujson.dumps(punctuations)
-
-        Nlex = parts.count('N_NN') + parts.count('N_NNP') + parts.count('V_VM') + parts.count('V_VM_VNF') + parts.count('V_VM_VINF') + parts.count('V_VM_VNG') + parts.count('V_VAUX') + parts.count('JJ') + parts.count('RB')
-        self.LexicalDensity = Nlex / len(parts)
-        super(Answer, self).save(*args, **kwargs)
+# class AnswerType(models.Model):
+#     AnswerType = models.CharField(max_length=100, verbose_name='Answer Type')
+#     AnswerTypeDesc = models.CharField(max_length=200, verbose_name='Description of Answer Type')
+#     def __unicode__(self):
+#         return self.AnswerType
+#
+# class Answer(models.Model):
+#     ##AnswerTypeID = models.ForeignKey(AnswerType, verbose_name='Answer Type')
+#     AnswerText = models.CharField(max_length=500, verbose_name='Answer Text')
+#     AnswerTypeID = models.ManyToManyField(AnswerType, verbose_name='Answer Type', blank=True)
+#     AnswerTagsOnly = models.CharField(max_length=500, verbose_name='pos tags', null=True, blank=True)
+#     Comprehension = models.ForeignKey(Comprehension, verbose_name='Comprehension', null=True)
+#     SentenceIndex = models.IntegerField(default = 0)
+#     LexicalDensity = models.FloatField()
+#     ReadabilityIndex = models.FloatField()
+#     PunctuationIndex = models.CharField(max_length=200, verbose_name='punctuation index', default='0')
+#     cogX = models.FloatField(default=0)
+#     cogY = models.FloatField(default=0)
+#     center_of_gravity = models.FloatField(default=0)
+#     AnswerRemarks = models.CharField(max_length=500, verbose_name='Remarks', blank=True)
+#     LastUpdate = models.DateTimeField(auto_now=True)
+#     def __unicode__(self):
+#         return self.AnswerText
+#
+#     def save(self, *args, **kwargs):
+#         parts = self.AnswerTagsOnly.split('\\')
+#
+#         punctuations = [i+1 for i, x in enumerate(parts) if x == 'RD_PUNC']
+#         self.PunctuationIndex = ujson.dumps(punctuations)
+#
+#         Nlex = parts.count('N_NN') + parts.count('N_NNP') + parts.count('V_VM') + parts.count('V_VM_VNF') + parts.count('V_VM_VINF') + parts.count('V_VM_VNG') + parts.count('V_VAUX') + parts.count('JJ') + parts.count('RB')
+#         self.LexicalDensity = Nlex / len(parts)
+#         super(Answer, self).save(*args, **kwargs)
 
 class DictionarySet(models.Model):
     name = models.CharField(max_length=100)
@@ -204,7 +204,7 @@ class Dictionary(models.Model):
 
 class Patterns(models.Model):
     QuestionTypeID = models.ForeignKey(QuestionType, verbose_name='Question Type')
-    AnswerTypeID = models.ForeignKey(AnswerType, verbose_name='Answer Type')
+    # AnswerTypeID = models.ForeignKey(AnswerType, verbose_name='Answer Type')
     PatternName	= models.CharField(max_length=100, verbose_name='Pattern Name')
     PatternDesc = models.CharField(max_length=350, verbose_name='Pattern Description')
     PatternRegularExpression = models.CharField(max_length=350, verbose_name='Pattern Regular Expression')

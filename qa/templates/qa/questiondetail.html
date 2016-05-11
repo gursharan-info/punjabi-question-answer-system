@@ -7,7 +7,7 @@
     <p>{{ comprehension.ComprehensionsText }}</p>
 </div>
 <h3>{{question}}</h3>
-<div class="row">
+<!--<div class="row">
     <table class="table table-striped table-hover">
         <thead>
             <tr>
@@ -30,41 +30,70 @@
                 <td>{{question.center_of_gravity.lexical_density}}</td>
                 <td>{{question.center_of_gravity.readability_index}}</td>
                 <td>{{question.center_of_gravity.punctuation_index}}</td>
-                <td>X = {{question.center_of_gravity.cogX}}, Y = {{question.center_of_gravity.cogY}} <!--= {{question.center_of_gravity}}--></td>
+                <td>X = {{question.center_of_gravity.cogX}}, Y = {{question.center_of_gravity.cogY}} &lt;!&ndash;= {{question.center_of_gravity}}&ndash;&gt;</td>
             </tr>
         </tbody>
     </table>
-</div>
+</div>-->
 <div class="row">
     <dl>
-        <dt class="text-center">Sentences</dt>
+        <dt class="text-center">Question, Sentence Pair</dt>
         <dd>
             <table class="table table-bordered table-striped table-hover">
                 <thead>
                     <tr>
-                        <th>Sentence</th>
-                        <th>Sentence Index</th>
+                        <th>CoG of</th>
                         <th>(X1,Y1)(X2,Y2)(X3,Y3)</th>
                         <th>Lexical Density</th>
                         <th>Readability Index</th>
-                        <th>Punctuation Index</th>
+                        <th>S_Lex</th>
+                        <!--<th>Bigrams</th>-->
+                        <!--<th>Bonus Value</th>-->
                         <th>COG</th>
+                        <!--<th>E.D.</th>-->
+                        <!--<th>Bonuses</th>-->
+                        <th>E.D.</th>
+                        <th>Sim</th>
                     </tr>
                 </thead>
                 <tbody>
-                        {%for answer in answers %}
+                        {%for cog in cog_bag %}
                             <tr>
-                                <td>{{answer.sentence}}</td>
-                                <td>{{answer.sentence_index}}</td>
-                                <td>
-                                    ({{answer.sentence_cog.X1}},{{answer.sentence_cog.Y1}})<br>
-                                    ({{answer.sentence_cog.X2}},{{answer.sentence_cog.Y2}})<br>
-                                    ({{answer.sentence_cog.X3}},{{answer.sentence_cog.Y3}})
+                                <th>Question</th>
+                                <td width="10%">
+                                    NE - ({{cog.question_cog.X1}},{{cog.question_cog.Y1}})<br>
+                                    <!--POS - ({{cog.question_cog.X2}},{{cog.question_cog.Y2}})<br>-->
+                                    Bonus - ({{cog.question_cog.X2}},{{cog.question_cog.Y2}})<br>
+                                    <!--RF - ({{cog.question_cog.X3}},{{cog.question_cog.Y3}})-->
+                                    Bigrams - ({{cog.question_cog.X3}},{{cog.question_cog.Y3}})
                                 </td>
-                                <td>{{answer.lexical_density|floatformat:6}}</td>
-                                <td>{{answer.readability_index}}</td>
-                                <td>{{answer.punctuation_index}}</td>
-                                <td>X={{answer.cogX|floatformat:6}} <br> Y={{answer.cogY|floatformat:6}}</td>
+                                <td>{{cog.question_cog.lexical_density|floatformat:6}}</td>
+                                <td>{{cog.question_cog.readability_index}}</td>
+                                <td>{{cog.question_cog.q_lex}}</td>
+                                <!--<td>{{cog.matched_bigrams}}</td>-->
+                                <!--<td rowspan="2">{{cog.question_cog.bonus_value}}</td>-->
+                                <td>X={{cog.question_cog.cogX|floatformat:6}} <br> Y={{cog.question_cog.cogY|floatformat:6}}</td>
+                                <!--<td rowspan="2">{{cog.euclidean_distance}}</td>-->
+                                <!--<td>{{cog.question_bonus_distance}}</td>-->
+                                <td rowspan="2">{{cog.euclidean_distance}}</td>
+                                <td rowspan="2">{{cog.similarity}}</td>
+                            </tr>
+                            <tr>
+                                <th>{{cog.sentence_cog.sentence}}</th>
+                                <td width="10%">
+                                    NE - ({{cog.sentence_cog.X1}},{{cog.sentence_cog.Y1}})<br>
+                                    <!--POS - ({{cog.sentence_cog.X2}},{{cog.sentence_cog.Y2}})<br>-->
+                                    Bonus - ({{cog.sentence_cog.X2}},{{cog.sentence_cog.Y2}})<br>
+                                    <!--RF - ({{cog.sentence_cog.X3}},{{cog.sentence_cog.Y3}})-->
+                                    Bigrams - ({{cog.sentence_cog.X3}},{{cog.sentence_cog.Y3}})
+                                </td>
+                                <td>{{cog.sentence_cog.lexical_density|floatformat:6}}</td>
+                                <td>{{cog.sentence_cog.readability_index}}</td>
+                                <td>{{cog.sentence_cog.s_lex}}</td>
+                                <!--<td>{{cog.sentence_cog.matched_bigrams}}</td>-->
+                                <!--<td>{{cog.sentence_cog.bonus_value}}</td>-->
+                                <td>X={{cog.sentence_cog.cogX|floatformat:6}} <br> Y={{cog.sentence_cog.cogY|floatformat:6}}</td>
+                                <!--<td>{{cog.sentence_bonus_distance}}</td>-->
                             </tr>
                         {% endfor %}
                 </tbody>
