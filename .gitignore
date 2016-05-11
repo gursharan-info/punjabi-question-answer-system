@@ -1,6 +1,6 @@
-.idea/*
-.punjabiqa/*
-.home/*
-.qa/migrations/*
-.qa/static/*
-.static/*
+idea/
+punjabiqa/
+home/
+qa/migrations/
+qa/static/
+static/
