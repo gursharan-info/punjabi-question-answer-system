@@ -4,4 +4,4 @@ home/
 qa/migrations/
 qa/static/
 static/
-*.json
+*.pyc
