@@ -5,8 +5,6 @@ import math
 from collections import Counter
 import relationship_calulator as rc
 import bonus
-import nltk
-from nltk.collocations import *
 # Calculates CoGM (Center of Gravity Metric) value
 
 

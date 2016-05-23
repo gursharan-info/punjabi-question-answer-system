@@ -13,5 +13,7 @@ urlpatterns = [
     url(r'^questions/$', views.questions, name='questions'),
     url(r'^sentences/$', views.sentences, name='sentences'),
     url(r'^toppatterns/$', views.top_patterns, name='toppatterns'),
-    url(r'^testing/$', views.testing, name='testing'),
+    url(r'^testing/(?P<type_id>[0-9]+)/$', views.testing, name='testing'),
+    url(r'^export/$', views.exportdataset, name='export'),
+    url(r'^wordcount/$', views.wordcount, name='wordcount'),
 ]

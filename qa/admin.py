@@ -29,9 +29,9 @@ class QuestionAdmin(admin.ModelAdmin):
     form = QuestionForm
 
 class QuestionInline(admin.TabularInline):  # Similar to book in example github page
-    fields = ('QuestionText', 'QuestionTypeID','QuestionTagged', 'QuestionTagsOnly', 'QuestionRemarks')
+    fields = ('QuestionText', 'QuestionTypeID','QuestionTagged')
     model = Question
-    extra = 4
+    extra = 0
 
 # class AnswerInline(admin.TabularInline):   # Similar to Press in github page
 #     model = Answer

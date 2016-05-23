@@ -10,6 +10,8 @@ def check_question_type(question):
     question_words = question.split()
     if "ਕਿਵੇਂ" in question_words:
         type = {'function': 'how', 'q_word': "ਕਿਵੇਂ"}
+    elif "ਕੀ-ਕੀ" in question_words:
+        type = {'function': 'what', 'q_word': "ਕੀ-ਕੀ"}
     elif "ਕੀ" in question_words:
         type = {'function': 'what', 'q_word': "ਕੀ"}
     elif "ਕਦੋਂ" in question_words:
@@ -22,6 +24,8 @@ def check_question_type(question):
         type = {'function': 'which', 'q_word': "ਕਿਹੜਾ"}
     elif "ਕਿਹੜੀ" in question_words:
         type = {'function': 'which', 'q_word': "ਕਿਹੜੀ"}
+    elif "ਕਿਹੜੀਆਂ" in question_words:
+        type = {'function': 'which', 'q_word': "ਕਿਹੜੀਆਂ"}
     elif "ਕਿਹੜੇ-ਕਿਹੜੇ" in question_words:
         type = {'function': 'which', 'q_word': "ਕਿਹੜੇ-ਕਿਹੜੇ"}
     elif "ਕਿਹੜੇ" in question_words:
@@ -30,8 +34,8 @@ def check_question_type(question):
         type = {'function': 'who', 'q_word': "ਕੌਣ-ਕੌਣ"}
     elif "ਕੌਣ" in question_words:
         type = {'function': 'who', 'q_word': "ਕੌਣ"}
-    elif any(("ਕਿਸ ਤਰ੍ਹਾਂ","ਕਿਸ ਤਰਾਂ")) in question_words:
-        type = {'function': 'how', 'q_word': "ਕਿਸ"}
+    # elif any(("ਕਿਸ ਤਰ੍ਹਾਂ","ਕਿਸ ਤਰਾਂ")) in question_words:
+    #     type = {'function': 'how', 'q_word': "ਕਿਸ"}
     elif "ਕਿਸ-ਕਿਸ" in question_words:
         type = {'function': 'who', 'q_word': "ਕਿਸ-ਕਿਸ"}
     elif "ਕਿਸ" in question_words:
@@ -40,16 +44,20 @@ def check_question_type(question):
         type = {'function': 'who', 'q_word': "ਕਿਸੇ"}
     elif "ਕਿਉਂ" in question_words:
         type = {'function': 'why', 'q_word': "ਕਿਉਂ"}
-    elif "ਕਿਹੋ ਜਿਹੀ" in question_words:
-        type = {'function': 'what_kind_type', 'q_word': "ਕਿਉਂ"}
-    elif "ਕਿਹੋ ਜਿਹੇ" in question_words:
-        type = {'function': 'what_kind_type', 'q_word': "ਕਿਉਂ"}
-    elif "ਕਿਹੋ ਜਿਹਾ" in question_words:
-        type = {'function': 'what_kind_type', 'q_word': "ਕਿਉਂ"}
+    elif "ਕਿਹੋ-ਜਿਹੀ" in question_words:
+        type = {'function': 'what_kind_type', 'q_word': "ਕਿਹੋ-ਜਿਹੀ"}
+    elif "ਕਿਹੋ-ਜਿਹੇ" in question_words:
+        type = {'function': 'what_kind_type', 'q_word': "ਕਿਹੋ-ਜਿਹੇ"}
+    elif "ਕਿਹੋ-ਜਿਹਾ" in question_words:
+        type = {'function': 'what_kind_type', 'q_word': "ਕਿਹੋ-ਜਿਹਾ"}
+    elif "ਕਿਹੋ-ਜਿਹੀਆਂ" in question_words:
+        type = {'function': 'what_kind_type', 'q_word': "ਕਿਹੋ-ਜਿਹੀਆਂ"}
     elif "ਕਿੰਨਾ" in question_words:
         type = {'function': 'how_much', 'q_word': "ਕਿੰਨਾ"}
     elif "ਕਿੰਨੀ" in question_words:
         type = {'function': 'how_much', 'q_word': "ਕਿੰਨੀ"}
+    elif "ਕਿੰਨੀ-ਕਿੰਨੀ" in question_words:
+        type = {'function': 'how_much', 'q_word': "ਕਿੰਨੀ-ਕਿੰਨੀ"}
     elif "ਕਿੰਨੇ" in question_words:
         type = {'function': 'how_many', 'q_word': "ਕਿੰਨੇ"}
     elif "ਕਿੰਨੀਆਂ" in question_words:
@@ -58,6 +66,7 @@ def check_question_type(question):
 
 def split_question(question, question_word):
     parts = question.split(question_word)
+    print question_word
     q1 = parts[0].strip()
     q2 = parts[1].strip()
     return {'q1': parts[0].split(), 'q2': parts[1].split()}
@@ -250,7 +259,6 @@ def formulate(question, comprehension):
     import re
     comprehension = re.sub(r'([\'\"])', '', comprehension)
     question_type = check_question_type(question)
-    # print question_type
     if question_type:
         question_type_function_name = question_type['function'] + "_logic"
         question_type_function_call = getattr(thismodule, question_type_function_name)

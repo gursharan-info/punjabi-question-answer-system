@@ -1,6 +1,7 @@
-idea/
+.idea/
 punjabiqa/
 home/
 qa/migrations/
 qa/static/
 static/
+*.json

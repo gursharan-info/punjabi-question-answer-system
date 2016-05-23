@@ -120,7 +120,7 @@ def get_bonus(question_words, question_named_entity_types, sentence_words, sente
         nes = len([n for n in ["numbers", "money", "quantity"] if n in sentence_named_entity_types])
         if nes >= 1:
             bonus_y += nes
-        match_strings = ["ਐਨੇ", "ਏਨੇ"]
+        match_strings = ["ਐਨੇ", "ਏਨੇ", "ਸਾਰੇ", "ਓਨੇ", "ਉਨੇ", "ਜਿੰਨੇ"]
         word_matches = len([m for m in match_strings if m in sentence_words])
         if word_matches >= 1:
             bonus_y += word_matches
@@ -129,7 +129,7 @@ def get_bonus(question_words, question_named_entity_types, sentence_words, sente
         nes = len([n for n in ["numbers", "money", "quantity"] if n in sentence_named_entity_types])
         if nes >= 1:
             bonus_y += nes
-        match_strings = ["ਜਿੰਨੀਆਂ", "ਓਨੀਆਂ", "ਉਨੀਆਂ", "ਏਨੀਆਂ", "ਐਨੀਆਂ"]
+        match_strings = ["ਜਿੰਨੀਆਂ", "ਓਨੀਆਂ", "ਉਨੀਆਂ", "ਏਨੀਆਂ", "ਐਨੀਆਂ", "ਸਾਰੀਆਂ"]
         word_matches = len([m for m in match_strings if m in sentence_words])
         if word_matches >= 1:
             bonus_y += word_matches
@@ -145,8 +145,8 @@ def get_bonus(question_words, question_named_entity_types, sentence_words, sente
         if verb_matches >= 1:
             bonus_y += verb_matches
 
-    elif "ਕਿਹੋ ਜਿਹਾ" or "ਕਿਹੋ ਜਿਹੇ" in question_words:
-        match_strings = ["ਇਹੋ ਜਿਹਾ", "ਇਹੋ ਜਿਹੇ"]
+    elif "ਕਿਹੋ-ਜਿਹਾ" or "ਕਿਹੋ-ਜਿਹੇ" or "ਕਿਹੋ-ਜਿਹੀਆਂ" or "ਕਿਹੋ-ਜਿਹੀ" in question_words:
+        match_strings = ["ਇਹੋ ਜਿਹਾ", "ਇਹੋ ਜਿਹੇ", "ਵਰਗੇ", "ਵਰਗਾ", "ਵਰਗੀ", "ਵਰਗੀਆਂ"]
         word_matches = len([m for m in match_strings if m in sentence_words])
         if word_matches >= 1:
             bonus_y += word_matches

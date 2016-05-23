@@ -93,6 +93,49 @@ def compdetail(request, comprehension_id):
         raise Http404('Comprehension does not exist')
     return render(request,  'qa/compdetail.html', {'comprehension': comprehension, 'questions': questions})
 
+def exportdataset(request):
+    import codecs
+    #
+    module_dir = os.path.dirname(__file__)  # get current directory
+    file_path = os.path.join(module_dir, 'results/dataset2.txt')
+    output_file = codecs.open(file_path, 'a', encoding="utf-8")
+    output = ""
+    comprehension = Comprehension.objects.all()
+    c_count = 0
+    q_count = 0
+    for c in comprehension:
+        c_count += 1
+        output += c.ComprehensionTitle + "\n\n" + \
+                  c.ComprehensionsText + "\n\n" + \
+                  c.ComprehensionTagged + "\n\n\n"
+        questions = Question.objects.select_related().filter(Comprehension=c)
+        for q in questions:
+            q_count += 1
+            output += q.QuestionText + "\n"
+        output += "\n"
+        for q in questions:
+            output += q.QuestionTagged + "\n"
+        output += "\n ------------------------------------------------- \n"
+    import time
+    output += "\n\n" + "Comprehensions = " + str(c_count) + "\nQuestions = " + str(q_count) + "\n" + str(time.clock()) + " seconds"
+    output_file.writelines(output)
+    output_file.close()
+    return render(request,  'qa/compdetail.html', {})
+
+def wordcount(request):
+    import codecs
+    #
+    str = ""
+    comprehensions = Comprehension.objects.all()
+    questions = Question.objects.all()
+    for c in comprehensions:
+        str += " " + c.ComprehensionsText
+    for q in questions:
+        str += " " + q.QuestionText
+    count = len(set(str.split(' ')))
+    import time
+    return render(request,  'qa/count.html', {'count': count, 'time': time.clock()})
+
 def questions(request):
 
     question_types = QuestionType.objects.all()
@@ -117,8 +160,8 @@ def questiondetail(request, question_id):
         tag_parts = question.QuestionTagsOnly.split('\\')
 
         # Find Punctuation Index (W3)
-        punctuations = [i+1 for i, x in enumerate(tag_parts) if x == 'RD_PUNC']
-        punctuation_index = punctuations[-1]
+        # punctuations = [i+1 for i, x in enumerate(tag_parts) if x == 'RD_PUNC']
+        # punctuation_index = punctuations[-1]
 
         #Fetch compound words from the dictionary and count their matches against question words
         compound_words = Dictionary.objects.filter(CompoundWord=True)
@@ -132,7 +175,7 @@ def questiondetail(request, question_id):
 
         question_named_entity_types = [ne.name for ne in NamedEntityType.objects.filter(dictionary__Word__in=question_named_entities).distinct()]
 
-        question_bag = {'question_word_tags': question_word_tags, 'punctuation_index': punctuation_index,
+        question_bag = {'question_word_tags': question_word_tags, 'punctuation_index': 1,
                         'question_compound_words_count': question_compound_words_count,
                         'question_named_entity_types': question_named_entity_types,
                         'question_named_entities': question_named_entities }
@@ -147,7 +190,7 @@ def questiondetail(request, question_id):
         # sentences = st.who_logic(question.QuestionText, comprehension.ComprehensionsText)
         sentences = sf.formulate(question.QuestionText, comprehension.ComprehensionsText)
 
-        # print nn_anwers
+        # print sentences
         probable_answers = []
         answers_cog_list = []
         for sentence_index, sentence in enumerate(sentences['sentences']):
@@ -162,9 +205,9 @@ def questiondetail(request, question_id):
             sentence_named_entities = [m for m in sentence_words if m in all_named_entities]
             sentence_named_entity_types = [ne.name for ne in NamedEntityType.objects.filter(dictionary__Word__in=sentence_named_entities).distinct()]
 
-            # Find Punctuation Index (W3)
-            punctuations = [iter + 1 for iter, punc in enumerate(sentence_words) if punc == '|']
-            punctuation_index = punctuations[-1]
+            # # Find Punctuation Index (W3)
+            # punctuations = [iter + 1 for iter, punc in enumerate(sentence_words) if punc == '|']
+            # punctuation_index = punctuations[-1]
 
             del sentence_words[-1]
 
@@ -175,7 +218,7 @@ def questiondetail(request, question_id):
                 if obj != None:
                     sentence_word_tags.append({'word': obj.Word, 'tag': obj.WordType})
 
-            sentence_bag = {'sentence_word_tags': sentence_word_tags, 'punctuation_index': punctuation_index,
+            sentence_bag = {'sentence_word_tags': sentence_word_tags, 'punctuation_index': 1,
                                 'sentence_compound_words_count': sentence_compound_words_count,
                                 'sentence_named_entity_types': sentence_named_entity_types,
                                 'sentence_named_entities': sentence_named_entities}
@@ -223,7 +266,36 @@ def questiondetail(request, question_id):
             #print sentence
             cog_bag.append(cog)
             # print cog
-        cog_bag = sorted(cog_bag, key=itemgetter('euclidean_distance'), reverse=True)
+        cog_bag = sorted(cog_bag, key=itemgetter('similarity'), reverse=True)
+
+        # import codecs
+        #
+        # module_dir = os.path.dirname(__file__)  # get current directory
+        # file_path = os.path.join(module_dir, 'results.txt')
+        # output_file = codecs.open(file_path, 'a', encoding="utf-8")
+        # for c in cog_bag:
+        #     output = "Question" + "\n" + \
+        #              "X1= " + str(c['question_cog']['X1']) + "\n" + \
+        #              "Y1= " + str(c['question_cog']['Y1']) + "\n" + \
+        #              "X2= " + str(c['question_cog']['X2']) + "\n" + \
+        #              "Y2= " + str(c['question_cog']['Y2']) + "\n" + \
+        #              "X3= " + str(c['question_cog']['X3']) + "\n" + \
+        #              "Y3= " + str(c['question_cog']['Y3']) + "\n" + \
+        #              "W1= " + str(c['question_cog']['lexical_density']) + "\n" + \
+        #              "W2= " + str(c['question_cog']['readability_index']) + "\n" + \
+        #              "W3= " + str(c['question_cog']['q_lex']) + "\n\n" + \
+        #              "Sentence" + "\n" + \
+        #              "X1= " + str(c['sentence_cog']['X1']) + "\n" + \
+        #              "Y1= " + str(c['sentence_cog']['Y1']) + "\n" + \
+        #              "X2= " + str(c['sentence_cog']['X2']) + "\n" + \
+        #              "Y2= " + str(c['sentence_cog']['Y2']) + "\n" + \
+        #              "X3= " + str(c['sentence_cog']['X3']) + "\n" + \
+        #              "Y3= " + str(c['sentence_cog']['Y3']) + "\n" + \
+        #              "W1= " + str(c['sentence_cog']['lexical_density']) + "\n" + \
+        #              "W2= " + str(c['sentence_cog']['readability_index']) + "\n" + \
+        #              "W3= " + str(c['sentence_cog']['s_lex']) + "\n\n\n\n"
+        #     output_file.writelines(str(output))
+        # output_file.close()
 
         # import codecs
         #
@@ -272,113 +344,113 @@ def questiondetail(request, question_id):
                    # 'answers': answers, 'answers_dump': ujson.dumps(answers)
                     })
 
-def testing(request):
-    question_types_list = QuestionType.objects.all()
+def testing(request, type_id):
+    type = QuestionType.objects.get(pk=type_id)
 
-    for type in question_types_list:
-        import codecs
-        #
-        module_dir = os.path.dirname(__file__)  # get current directory
-        file_path = os.path.join(module_dir, 'out5.txt')
-        output_file = codecs.open(file_path, 'a', encoding="utf-8")
-        # type_str = type.QuestionType, "\n"
-        # output_file.writelines(type_str)
+    import codecs
+    #
+    module_dir = os.path.dirname(__file__)  # get current directory
+    file_path = os.path.join(module_dir, 'results/results_type_'+type_id+'.txt')
+    output_file = codecs.open(file_path, 'a', encoding="utf-8")
+    type_str = "\n \n" + type.QuestionType + "\n \n"
+    output_file.writelines(type_str)
 
-        questions_ids = [q.id for q in Question.objects.filter(QuestionTypeID=type)]
-        # print questions
-        for question_id in questions_ids:
-            question = Question.objects.get(pk=question_id)
-            comprehension = Comprehension.objects.get(pk=question.Comprehension_id)
-            # print comprehension
-            # Split Question tags string into individual tags
-            tag_parts = question.QuestionTagsOnly.split('\\')
+    questions_ids = [q.id for q in Question.objects.filter(QuestionTypeID=type_id)]
+    # print questions
+    for question_id in questions_ids:
+        question = Question.objects.get(pk=question_id)
+        comprehension = Comprehension.objects.get(pk=question.Comprehension_id)
+        # print comprehension
+        # Split Question tags string into individual tags
+        tag_parts = question.QuestionTagsOnly.split('\\')
 
-            # Fetch compound words from the dictionary and count their matches against question words
-            compound_words = Dictionary.objects.filter(CompoundWord=True)
-            question_words = question.QuestionText.split(' ')
-            question_compound_words_count = len([match for match in question_words if match in compound_words])
+        # Fetch compound words from the dictionary and count their matches against question words
+        compound_words = Dictionary.objects.filter(CompoundWord=True)
+        question_words = question.QuestionText.split(' ')
+        question_compound_words_count = len([match for match in question_words if match in compound_words])
 
-            question_word_tags = [{'word': w, 'tag': t} for w, t in zip(question_words, tag_parts) if t != "RD_PUNC"]
+        question_word_tags = [{'word': w, 'tag': t} for w, t in zip(question_words, tag_parts) if t != "RD_PUNC"]
 
-            all_named_entities = [dict.Word for dict in Dictionary.objects.filter(NamedEntity=True)]
-            question_named_entities = [m for m in question_words if m in all_named_entities]
+        all_named_entities = [dict.Word for dict in Dictionary.objects.filter(NamedEntity=True)]
+        question_named_entities = [m for m in question_words if m in all_named_entities]
 
-            question_named_entity_types = [ne.name for ne in NamedEntityType.objects.filter(
+        question_named_entity_types = [ne.name for ne in NamedEntityType.objects.filter(
                 dictionary__Word__in=question_named_entities).distinct()]
 
-            punctuations = [i + 1 for i, x in enumerate(tag_parts) if x == 'RD_PUNC']
-            punctuation_index = punctuations[-1]
-            question_bag = {'question_word_tags': question_word_tags, 'punctuation_index': punctuation_index,
+        question_bag = {'question_word_tags': question_word_tags, 'punctuation_index': 1,
                             'question_compound_words_count': question_compound_words_count,
                             'question_named_entity_types': question_named_entity_types,
                             'question_named_entities': question_named_entities}
 
-            cog_bag = []
-            import sentence_formulation as sf
-            sentences = sf.formulate(question.QuestionText, comprehension.ComprehensionsText)
+        cog_bag = []
+        import sentence_formulation as sf
+        sentences = sf.formulate(question.QuestionText, comprehension.ComprehensionsText)
 
-            probable_answers = []
-            answers_cog_list = []
-            for sentence_index, sentence in enumerate(sentences['sentences']):
-                words = sentence.split()
-                sentence_words = sentence.split()
-                # print sentence_words
-                sentence_compound_words_count = len([match for match in sentence_words if match in compound_words])
-                sentence_named_entities = [m for m in sentence_words if m in all_named_entities]
-                sentence_named_entity_types = [ne.name for ne in NamedEntityType.objects.filter(
+        probable_answers = []
+        answers_cog_list = []
+        for sentence_index, sentence in enumerate(sentences['sentences']):
+            words = sentence.split()
+            sentence_words = sentence.split()
+            # print sentence_words
+            sentence_compound_words_count = len([match for match in sentence_words if match in compound_words])
+            sentence_named_entities = [m for m in sentence_words if m in all_named_entities]
+            sentence_named_entity_types = [ne.name for ne in NamedEntityType.objects.filter(
                     dictionary__Word__in=sentence_named_entities).distinct()]
 
-                del sentence_words[-1]
-                # punctuations = [iter + 1 for iter, punc in enumerate(sentence_words) if punc == u'|']
-                # print punctuations
-                # punctuation_index = punctuations[-1]
+            del sentence_words[-1]
+            # punctuations = [iter + 1 for iter, punc in enumerate(sentence_words) if punc == u'|']
+            # print punctuations
+            # punctuation_index = punctuations[-1]
 
-                sentence_word_tags = []
-                for word in sentence_words:
-                    obj = Dictionary.objects.filter(Word=word).first()
-                    if obj != None:
-                        sentence_word_tags.append({'word': obj.Word, 'tag': obj.WordType})
+            sentence_word_tags = []
+            for word in sentence_words:
+                obj = Dictionary.objects.filter(Word=word).first()
+                if obj != None:
+                    sentence_word_tags.append({'word': obj.Word, 'tag': obj.WordType})
 
-                sentence_bag = {'sentence_word_tags': sentence_word_tags, 'punctuation_index': 1,
+            sentence_bag = {'sentence_word_tags': sentence_word_tags, 'punctuation_index': 1,
                                 'sentence_compound_words_count': sentence_compound_words_count,
                                 'sentence_named_entity_types': sentence_named_entity_types,
                                 'sentence_named_entities': sentence_named_entities}
-                cog = cogm.calculate_cogm(question_bag, sentence_bag)
-                euclidean_distance = cogm.euclidean_distance(cog['sentence_cog']['cogX'], cog['sentence_cog']['cogY'],
+            cog = cogm.calculate_cogm(question_bag, sentence_bag)
+            distance_similarity = cogm.euclidean_distance_similarity(cog['sentence_cog']['cogX'], cog['sentence_cog']['cogY'],
                                                              cog['question_cog']['cogX'], cog['question_cog']['cogY'])
-                cog['euclidean_distance'] = euclidean_distance
-                cog['bonus_value'] = cog['sentence_cog']['bonus_value']
-                cog['question_cog']['question'] = question.QuestionText
-                cog['sentence_cog']['sentence'] = sentence
-                cog['matched_bigrams'] = cog['sentence_cog']['matched_bigrams']
+            cog['euclidean_distance'] = distance_similarity['euclidean_distance']
+            cog['similarity'] = distance_similarity['similarity']
+            cog['bonus_value'] = cog['sentence_cog']['bonus_value']
+            cog['question_cog']['question'] = question.QuestionText
+            cog['sentence_cog']['sentence'] = sentence
+            cog['matched_bigrams'] = cog['sentence_cog']['matched_bigrams']
 
-                cog_bag.append(cog)
+            cog_bag.append(cog)
 
-            cog_bag = sorted(cog_bag, key=itemgetter('euclidean_distance'), reverse=True)
+        cog_bag = sorted(cog_bag, key=itemgetter('similarity'), reverse=True)
 
-            try:
-                if len(cog_bag) > 0:
-                    output = re.sub(r'([\'\"\,])', '', cog_bag[0]['question_cog']['question']) + ", (" + \
-                             str(cog_bag[0]['question_cog']['X1']) + " " + \
-                             str(cog_bag[0]['question_cog']['Y1']) + ") " + "(" + str(cog_bag[0]['question_cog']['X2']) + " " + \
-                             str(cog_bag[0]['question_cog']['Y2']) + ") " + "(" + str(cog_bag[0]['question_cog']['X3']) + " " + \
-                             str(cog_bag[0]['question_cog']['Y3']) + "), " + str(cog_bag[0]['question_cog']['lexical_density']) + \
-                             ", " + str(cog_bag[0]['question_cog']['readability_index']) + \
-                             str(cog_bag[0]['question_cog']['q_lex']) + ", (" + str(cog_bag[0]['sentence_cog']['cogX']) + \
-                             " " + str(cog_bag[0]['question_cog']['cogY']) + "), " + str(cog_bag[0]['euclidean_distance']), "\n"
-                    output += re.sub(r'([\'\"\,])', '', cog_bag[0]['sentence_cog']['sentence']) + ", (" + \
-                              str(cog_bag[0]['sentence_cog']['X1']) + " " + \
-                              str(cog_bag[0]['sentence_cog']['Y1']) + ") " + "(" + str(cog_bag[0]['sentence_cog']['X2']) + " " + \
-                              str(cog_bag[0]['sentence_cog']['Y2']) + ") " + "(" + str(cog_bag[0]['sentence_cog']['X3']) + " " + \
-                              str(cog_bag[0]['sentence_cog']['Y3']) + "), " + str(cog_bag[0]['sentence_cog']['lexical_density']) + \
-                              ", " + str(cog_bag[0]['sentence_cog']['readability_index']) + \
-                              str(cog_bag[0]['sentence_cog']['s_lex']) + ", (" + str(cog_bag[0]['sentence_cog']['cogX']) + \
-                              " " + str(cog_bag[0]['sentence_cog']['cogY']) + "), " + str(cog_bag[0]['euclidean_distance']), "\n"
-                    output_file.writelines(output)
-            except (IndexError, ValueError):
-                pass
+        try:
+            if len(cog_bag) > 0:
+                output = re.sub(r'([\'\"\,])', '', cog_bag[0]['question_cog']['question']) + ", (" + \
+                        str(cog_bag[0]['question_cog']['X1']) + " " + \
+                        str(cog_bag[0]['question_cog']['Y1']) + ") " + "(" + str(cog_bag[0]['question_cog']['X2']) + " " + \
+                        str(cog_bag[0]['question_cog']['Y2']) + ") " + "(" + str(cog_bag[0]['question_cog']['X3']) + " " + \
+                        str(cog_bag[0]['question_cog']['Y3']) + "), " + str(cog_bag[0]['question_cog']['lexical_density']) + \
+                        ", " + str(cog_bag[0]['question_cog']['readability_index']) + \
+                        str(cog_bag[0]['question_cog']['q_lex']) + ", (" + str(cog_bag[0]['sentence_cog']['cogX']) + \
+                        " " + str(cog_bag[0]['question_cog']['cogY']) + "), " + str(cog_bag[0]['euclidean_distance']) + ", " + \
+                        str(cog_bag[0]['similarity']), "\n"
+                output += re.sub(r'([\'\"\,])', '', cog_bag[0]['sentence_cog']['sentence']) + ", (" + \
+                        str(cog_bag[0]['sentence_cog']['X1']) + " " + \
+                        str(cog_bag[0]['sentence_cog']['Y1']) + ") " + "(" + str(cog_bag[0]['sentence_cog']['X2']) + " " + \
+                        str(cog_bag[0]['sentence_cog']['Y2']) + ") " + "(" + str(cog_bag[0]['sentence_cog']['X3']) + " " + \
+                        str(cog_bag[0]['sentence_cog']['Y3']) + "), " + str(cog_bag[0]['sentence_cog']['lexical_density']) + \
+                        ", " + str(cog_bag[0]['sentence_cog']['readability_index']) + \
+                        str(cog_bag[0]['sentence_cog']['s_lex']) + ", (" + str(cog_bag[0]['sentence_cog']['cogX']) + \
+                        " " + str(cog_bag[0]['sentence_cog']['cogY']) + "), " + str(cog_bag[0]['euclidean_distance']) + ", " + \
+                        str(cog_bag[0]['similarity']), "\n"
+                output_file.writelines(output)
+        except (IndexError, ValueError):
+            pass
         # print output_list
-        output_file.close()
+    output_file.close()
 
 
     # types = QuestionType.objects.annotate(count=Count('questiontypes')).order_by('-count').values('id', 'count')

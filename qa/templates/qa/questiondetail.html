@@ -76,7 +76,7 @@
                                 <!--<td rowspan="2">{{cog.euclidean_distance}}</td>-->
                                 <!--<td>{{cog.question_bonus_distance}}</td>-->
                                 <td rowspan="2">{{cog.euclidean_distance}}</td>
-                                <td rowspan="2">{{cog.similarity}}</td>
+                                <td rowspan="2">{{cog.similarityv}}</td>
                             </tr>
                             <tr>
                                 <th>{{cog.sentence_cog.sentence}}</th>
@@ -116,6 +116,33 @@
 
 <input type="hidden" id="a_cog" value="{{answers_dump}}">
 
+{% for c in cog_bag %}
+    {{c.question_cog.question}}<br>
+    X1= {{c.question_cog.X1}}<br>
+    Y1= {{c.question_cog.Y1}}<br>
+    X2= {{c.question_cog.X2}}<br>
+    Y2= {{c.question_cog.Y2}}<br>
+    X3= {{c.question_cog.X3}}<br>
+    Y3= {{c.question_cog.Y3}}<br>
+    W1= {{c.question_cog.lexical_density}}<br>
+    W2= {{c.question_cog.readability_index}}<br>
+    W3= {{c.question_cog.q_lex}}<br>
+    CoG = ({{c.question_cog.cogX}}, {{c.question_cog.cogY}})<br><br>
+    {{c.sentence_cog.sentence}}<br>
+    X1= {{c.sentence_cog.X1}}<br>
+    Y1= {{c.sentence_cog.Y1}}<br>
+    X2= {{c.sentence_cog.X2}}<br>
+    Y2= {{c.sentence_cog.Y2}}<br>
+    X3= {{c.sentence_cog.X3}}<br>
+    Y3= {{c.sentence_cog.Y3}}<br>
+    W1= {{c.sentence_cog.lexical_density}}<br>
+    W2= {{c.sentence_cog.readability_index}}<br>
+    W3= {{c.sentence_cog.s_lex}}<br>
+    CoG = ({{c.sentence_cog.cogX}}, {{c.sentence_cog.cogY}})<br><br>
+    E.D = {{c.euclidean_distance}}<br>
+    Score = {{c.similarity}}<br><br><br>
+
+{% endfor %}
 
 {% for f in filtered %}
     {{f}}<br>
